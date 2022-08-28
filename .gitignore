@@ -7,6 +7,9 @@ syntax: glob
 *.idea
 *.pyd
 *.db
+# ------
+**/.pytest_cache/
 
 # Using regexp syntax
 syntax: regexp
+

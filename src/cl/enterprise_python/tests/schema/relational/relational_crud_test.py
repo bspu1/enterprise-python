@@ -58,6 +58,9 @@ class RelCrudTest:
         ccy_list = ["USD", "GBP", "JPY", "NOK", "AUD"]
         ccy_count = len(ccy_list)
 
+        #  Create a list of notional to populate trade records
+        notional_list = [100, 200, 300]
+
         fixed_legs = [
             RelationalLeg(
                 leg_id=f"L{i + 1}1",
@@ -84,6 +87,7 @@ class RelCrudTest:
                 trade_id=f"T{i + 1}",
                 trade_type="Swap",
                 legs=[fixed_legs[i], floating_legs[i]],
+                notional=notional_list[i]
             )
             for i in range(0, 2)
         ]
@@ -94,6 +98,7 @@ class RelCrudTest:
                 trade_id=f"T{i + 1}",
                 trade_type="Bond",
                 bond_ccy=ccy_list[i % ccy_count],
+                notional=notional_list[i]
             )
             for i in range(2, 3)
         ]
@@ -116,12 +121,10 @@ class RelCrudTest:
         trades = self.create_records()
 
         with engine.connect() as connection:
-
             # Create schema
             RelationalBase.metadata.create_all(engine)
 
             with Session(engine) as session:
-
                 # Write the trade and leg records and commit
                 session.add_all(trades)
                 session.commit()
@@ -145,8 +148,8 @@ class RelCrudTest:
                 # Must use noqa because PyCharm linter thinks does not return anything
                 all_swaps = list(
                     session.query(RelationalSwap)
-                    .where(RelationalSwap.trade_type == "Swap")
-                    .order_by(RelationalSwap.trade_id)
+                        .where(RelationalSwap.trade_type == "Swap")
+                        .order_by(RelationalSwap.trade_id)
                 )  # noqa
 
                 # Add the result to approvaltests file
@@ -167,15 +170,15 @@ class RelCrudTest:
                 #  market are like that), so we do not need to eliminate duplicates.
                 gbp_fixed_swaps = list(
                     session.query(RelationalSwap)
-                    .join(RelationalLeg)
-                    .where(
+                        .join(RelationalLeg)
+                        .where(
                         sa.and_(
                             RelationalSwap.trade_type == "Swap",
                             RelationalLeg.leg_ccy == "GBP",
                             RelationalLeg.leg_type == "Fixed",
                         )
                     )
-                    .order_by(RelationalSwap.trade_id)
+                        .order_by(RelationalSwap.trade_id)
                 )  # noqa
 
                 # Add the result to approvaltests file
@@ -186,6 +189,18 @@ class RelCrudTest:
                         f"leg_type[1]={trade.legs[1].leg_type} leg_ccy[1]={trade.legs[1].leg_ccy}\n"
                         for trade in gbp_fixed_swaps
                     ]
+                )
+
+                # Query for trades with notional >= 200 to result
+                trades_with_notional = list(
+                    session.query(RelationalTrade).where(RelationalTrade.notional >= 200).order_by(
+                        RelationalSwap.trade_id)
+                )
+                result += "Trades where notional >= 200:\n" + "".join(
+                    [
+                        f"    trade_id={trade.trade_id} trade_type={trade.trade_type} "
+                        f"notional={trade.notional}\n"
+                        for trade in trades_with_notional]
                 )
 
         # Verify result

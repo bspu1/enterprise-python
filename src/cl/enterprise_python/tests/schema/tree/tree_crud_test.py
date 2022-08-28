@@ -59,21 +59,25 @@ class TreeCrudTest:
         ccy_list = ["USD", "GBP", "JPY", "NOK", "AUD"]
         ccy_count = len(ccy_list)
 
+        # Create a list of notional to populate trade records
+        notional = [100, 200, 300]
+
         # Create swap records
         swaps = [
             TreeSwap(
-                trade_id=f"T{i+1}",
+                trade_id=f"T{i + 1}",
                 trade_type="Swap",
                 legs=[
                     TreeLeg(leg_type="Fixed", leg_ccy=ccy_list[i % ccy_count]),
                     TreeLeg(leg_type="Floating", leg_ccy="EUR"),
                 ],
+                notional=notional[i]
             )
             for i in range(0, 2)
         ]
         bonds = [
             TreeBond(
-                trade_id=f"T{i+1}", trade_type="Bond", bond_ccy=ccy_list[i % ccy_count]
+                trade_id=f"T{i + 1}", trade_type="Bond", bond_ccy=ccy_list[i % ccy_count], notional=notional[i]
             )
             for i in range(2, 3)
         ]
@@ -148,6 +152,16 @@ class TreeCrudTest:
                 f"leg_type[1]={trade.legs[1].leg_type} leg_ccy[1]={trade.legs[1].leg_ccy}\n"
                 for trade in gbp_fixed_swaps
             ]
+        )
+
+        # Add query for trades with notional >= 200 to result
+        trade_notional_qte_200 = TreeTrade.objects(notional__gte=200).order_by("trade_id")
+        result += "Trade notional >= 200:\n" + "".join(
+            [
+                f"    trade_id={trade.trade_id} "
+                f"trade_type={trade.trade_type} "
+                f"notional={trade.notional}\n"
+                for trade in trade_notional_qte_200]
         )
 
         # Further study - for MongoDB and certain other databases, wildcard queries
