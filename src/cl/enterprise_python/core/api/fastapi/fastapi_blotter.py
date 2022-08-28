@@ -36,12 +36,15 @@ def create_trades(trade_count: int) -> List[TreeTrade]:
     # Create a list of currencies to populate swap records
     ccy_list = ["USD", "EUR", "GBP", "JPY", "NOK", "AUD", "CAD"]
     ccy_count = len(ccy_list)
+    notional = [100, 200, 300]
+    notional_count = len(notional)
 
     # Create swap records
     swaps = [
         TreeSwap(
             trade_id=f"T{(i + 1):03}",
             trade_type="Swap",
+            notional=notional[i % notional_count],
             legs=[
                 TreeLeg(leg_type="Fixed", leg_ccy=ccy_list[i % ccy_count]),
                 TreeLeg(leg_type="Floating", leg_ccy=ccy_list[(2 * i) % ccy_count]),
@@ -114,6 +117,21 @@ def query_trades(leg_ccy: Optional[str] = None):
 @app.get("/example_raising_exception")
 def example_raising_exception():
     raise HTTPException(status_code=418, detail="Exception raised in FastAPI.")
+
+
+@app.post("/query_trades/notional")
+def query_by_notional(min_notional: Optional[str] = None):
+    """
+    The trades with notional >= min_notional
+    if min_notional is specified, and all trades otherwise.
+    """
+    if min_notional is None:
+        trades = TreeSwap.objects.order_by("trade_id")
+    else:
+        trades = TreeTrade.objects(notional__gte=int(min_notional)).order_by("trade_id")
+    result = {"trades": [trade.to_json() for trade in trades]}
+    return result
+
 
 
 if __name__ == "__main__":
