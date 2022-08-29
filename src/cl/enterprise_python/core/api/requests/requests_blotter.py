@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from pprint import pprint
 
 import requests
 
@@ -19,16 +20,34 @@ if __name__ == "__main__":
     # Execute fastapi_intro.py before running this code
 
     # Query all trades
-    api_url = "http://localhost:50301/query_trades"  # Port used by fastapi_blotter.py
-    trades = requests.post(api_url)
-    print(f"All trades: {trades.json()}")
+    # api_url = "http://localhost:50301/query_trades"  # Port used by fastapi_blotter.py
+    # trades = requests.post(api_url)
+    # print(f"All trades: {trades.json()}")
 
     # Query trades that have GBP for at least one leg
-    api_url = "http://localhost:50301/query_trades"  # Port used by fastapi_blotter.py
-    gbp_trades = requests.post(api_url, params={"leg_ccy": "GBP"})
-    print(f"Trades where leg_ccy=GBP for at least one leg: {gbp_trades.json()}")
+    # api_url = "http://localhost:50301/query_trades"  # Port used by fastapi_blotter.py
+    # gbp_trades = requests.post(api_url, params={"leg_ccy": "GBP"})
+    # print(f"Trades where leg_ccy=GBP for at least one leg: {gbp_trades.json()}")
 
     # Get one specific trade
-    api_url = "http://localhost:50301/get_trade"  # Port used by fastapi_blotter.py
-    t3_trade = requests.post(api_url, params={"trade_id": "T003"})
-    print(f"Trade with trade_id=T3: {t3_trade.json()}")
+    # api_url = "http://localhost:50301/get_trade"  # Port used by fastapi_blotter.py
+    # t3_trade = requests.post(api_url, params={"trade_id": "T003"})
+    # print(f"Trade with trade_id=T3: {t3_trade.json()}")
+
+    # Test query_by_notional both with and without the min_notional parameter.
+    ## Create 3 trades
+    api_url_create_trades = "http://localhost:50301/add_trades/3"
+    three_new_trades = requests.post(api_url_create_trades)
+    print("Three new trades was created")
+
+    api_url_query_by_notional = "http://localhost:50301/query_trades/notional"
+    query_by_notional_without_the_min_notional = requests.post(api_url_query_by_notional)
+    pprint(f"Trades without the min_notional parameter: \n {query_by_notional_without_the_min_notional.json()}\n")
+
+    query_by_notional_with_the_min_notional = requests.post(api_url_query_by_notional, params={"min_notional": "200"})
+    pprint(f"Trades with the min_notional parameter: \n {query_by_notional_with_the_min_notional.json()}\n")
+
+    ## Clear all trades
+    api_url_clear_trades = "http://localhost:50301/clear_trades"
+    quary_clear_trades = requests.post(api_url_clear_trades)
+    print(quary_clear_trades.json())

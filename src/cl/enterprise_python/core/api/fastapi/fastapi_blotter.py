@@ -128,7 +128,7 @@ def query_by_notional(min_notional: Optional[str] = None):
     if min_notional is None:
         trades = TreeSwap.objects.order_by("trade_id")
     else:
-        trades = TreeTrade.objects(notional__gte=int(min_notional)).order_by("trade_id")
+        trades = TreeTrade.objects(notional__gte=float(min_notional)).order_by("trade_id")
     result = {"trades": [trade.to_json() for trade in trades]}
     return result
 
